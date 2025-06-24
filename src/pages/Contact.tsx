@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
-import { MapPin, Phone, Clock } from 'lucide-react';
+import { MapPin, Phone, Clock, User } from 'lucide-react';
 
 const Contact = () => {
   const { t } = useLanguage();
@@ -68,7 +68,7 @@ const Contact = () => {
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="+880 1787-935543"
+                      placeholder="+880 1111-111111"
                     />
                   </div>
                 </div>
@@ -127,6 +127,16 @@ const Contact = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-start gap-3">
+                  <User className="h-5 w-5 text-green-600 mt-1" />
+                  <div>
+                    <h4 className="font-medium">Contact Person</h4>
+                    <p className="text-gray-600">
+                      Mahbubur Rahman
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
                   <MapPin className="h-5 w-5 text-green-600 mt-1" />
                   <div>
                     <h4 className="font-medium">Head Office</h4>
@@ -141,9 +151,8 @@ const Contact = () => {
                 <div className="flex items-start gap-3">
                   <Phone className="h-5 w-5 text-green-600 mt-1" />
                   <div>
-                    <h4 className="font-medium">Phone & Mobile</h4>
+                    <h4 className="font-medium">Mobile</h4>
                     <p className="text-gray-600">
-                      +880 2-9876-5432<br />
                       +880 1787-935543
                     </p>
                   </div>
