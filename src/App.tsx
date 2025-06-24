@@ -19,6 +19,7 @@ import Admin from "./pages/Admin";
 import News from "./pages/News";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import Premium from "./pages/premium";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/farmers" element={<Farmers />} />
               <Route path="/dairy" element={<Dairy />} />
               <Route path="/vet" element={<Vet />} />
+              <Route path="/premium" element={<Premium />} />
               <Route path="/feed" element={<Feed />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
