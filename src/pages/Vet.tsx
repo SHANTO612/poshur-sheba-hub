@@ -15,7 +15,7 @@ const Vet = () => {
       specialization: 'Large Animal Medicine',
       experience: '15 years',
       location: 'Dhaka',
-      contact: '+880 1711-234567',
+      contact: '+880 1111-111111',
       availability: 'Mon-Sat, 9AM-6PM',
       rating: 4.8
     },
@@ -25,7 +25,7 @@ const Vet = () => {
       specialization: 'Dairy Cattle Health',
       experience: '12 years',
       location: 'Chittagong',
-      contact: '+880 1712-345678',
+      contact: '+880 1222-222222',
       availability: 'Mon-Fri, 8AM-5PM',
       rating: 4.9
     },
@@ -35,7 +35,7 @@ const Vet = () => {
       specialization: 'Poultry & Small Animals',
       experience: '10 years',
       location: 'Sylhet',
-      contact: '+880 1713-456789',
+      contact: '+880 1333-333333',
       availability: 'Daily, 24/7 Emergency',
       rating: 4.7
     },
@@ -45,7 +45,7 @@ const Vet = () => {
       specialization: 'Animal Surgery',
       experience: '18 years',
       location: 'Rajshahi',
-      contact: '+880 1714-567890',
+      contact: '+880 1444-444444',
       availability: 'Mon-Sat, 10AM-7PM',
       rating: 4.9
     },
@@ -55,7 +55,7 @@ const Vet = () => {
       specialization: 'Livestock Reproduction',
       experience: '14 years',
       location: 'Khulna',
-      contact: '+880 1715-678901',
+      contact: '+880 1555-555555',
       availability: 'Mon-Fri, 9AM-6PM',
       rating: 4.6
     },
@@ -65,7 +65,7 @@ const Vet = () => {
       specialization: 'Animal Nutrition',
       experience: '11 years',
       location: 'Barisal',
-      contact: '+880 1716-789012',
+      contact: '+880 1666-666666',
       availability: 'Mon-Sat, 8AM-4PM',
       rating: 4.8
     }
