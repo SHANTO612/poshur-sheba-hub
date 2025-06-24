@@ -68,7 +68,7 @@ const Contact = () => {
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="+880 1787935543"
+                      placeholder="+880 1787-935543"
                     />
                   </div>
                 </div>
@@ -144,7 +144,7 @@ const Contact = () => {
                     <h4 className="font-medium">Phone & Mobile</h4>
                     <p className="text-gray-600">
                       +880 2-9876-5432<br />
-                      +880 1787935543
+                      +880 1787-935543
                     </p>
                   </div>
                 </div>
