@@ -1,0 +1,75 @@
+
+[
+  {
+    "id": 1,
+    "name": "Premium Bull",
+    "breed": "Brahman",
+    "weight": "450 kg",
+    "age": "3 years",
+    "price": "৳85,000",
+    "seller": "Karim Ahmed",
+    "location": "Dhaka",
+    "contact": "+880 1711-123456",
+    "description": "Healthy and strong bull, perfect for breeding"
+  },
+  {
+    "id": 2,
+    "name": "Dairy Cow",
+    "breed": "Holstein",
+    "weight": "380 kg",
+    "age": "4 years",
+    "price": "৳65,000",
+    "seller": "Fatima Begum",
+    "location": "Chittagong",
+    "contact": "+880 1712-234567",
+    "description": "High milk producing cow, excellent for dairy farming"
+  },
+  {
+    "id": 3,
+    "name": "Young Calf",
+    "breed": "Local",
+    "weight": "120 kg",
+    "age": "8 months",
+    "price": "৳25,000",
+    "seller": "Rahman Ali",
+    "location": "Sylhet",
+    "contact": "+880 1713-345678",
+    "description": "Healthy young calf with good growth potential"
+  },
+  {
+    "id": 4,
+    "name": "Breeding Cow",
+    "breed": "Sahiwal",
+    "weight": "420 kg",
+    "age": "5 years",
+    "price": "৳75,000",
+    "seller": "Abdul Mannan",
+    "location": "Rajshahi",
+    "contact": "+880 1714-456789",
+    "description": "Proven breeder with multiple successful calving"
+  },
+  {
+    "id": 5,
+    "name": "Buffalo Bull",
+    "breed": "Murrah",
+    "weight": "550 kg",
+    "age": "4 years",
+    "price": "৳95,000",
+    "seller": "Nasir Uddin",
+    "location": "Barisal",
+    "contact": "+880 1715-567890",
+    "description": "Strong buffalo bull suitable for farming and breeding"
+  },
+  {
+    "id": 6,
+    "name": "Jersey Cow",
+    "breed": "Jersey",
+    "weight": "350 kg",
+    "age": "3 years",
+    "price": "৳70,000",
+    "seller": "Rashida Khatun",
+    "location": "Khulna",
+    "contact": "+880 1716-678901",
+    "description": "Premium Jersey cow with excellent milk quality"
+  }
+]

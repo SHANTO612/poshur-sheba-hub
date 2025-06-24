@@ -1,0 +1,63 @@
+
+[
+  {
+    "id": 1,
+    "name": "Md. Karim Ahmed",
+    "farmName": "Green Valley Farm",
+    "location": "Savar, Dhaka",
+    "mobile": "+880 1711-123456",
+    "speciality": "Dairy Farming",
+    "experience": "15 years",
+    "livestock": "50 cattle, 20 goats"
+  },
+  {
+    "id": 2,
+    "name": "Fatima Begum",
+    "farmName": "Sunrise Dairy",
+    "location": "Chittagong",
+    "mobile": "+880 1712-234567",
+    "speciality": "Milk Production",
+    "experience": "12 years",
+    "livestock": "35 cows, 15 buffaloes"
+  },
+  {
+    "id": 3,
+    "name": "Rahman Ali",
+    "farmName": "Heritage Livestock",
+    "location": "Sylhet",
+    "mobile": "+880 1713-345678",
+    "speciality": "Cattle Breeding",
+    "experience": "20 years",
+    "livestock": "80 cattle"
+  },
+  {
+    "id": 4,
+    "name": "Abdul Mannan",
+    "farmName": "Modern Agro Farm",
+    "location": "Rajshahi",
+    "mobile": "+880 1714-456789",
+    "speciality": "Mixed Farming",
+    "experience": "18 years",
+    "livestock": "60 cattle, 40 goats, 100 chickens"
+  },
+  {
+    "id": 5,
+    "name": "Nasir Uddin",
+    "farmName": "River View Farm",
+    "location": "Barisal",
+    "mobile": "+880 1715-567890",
+    "speciality": "Buffalo Farming",
+    "experience": "10 years",
+    "livestock": "25 buffaloes, 30 cattle"
+  },
+  {
+    "id": 6,
+    "name": "Rashida Khatun",
+    "farmName": "Organic Dairy Farm",
+    "location": "Khulna",
+    "mobile": "+880 1716-678901",
+    "speciality": "Organic Farming",
+    "experience": "8 years",
+    "livestock": "40 organic cattle"
+  }
+]
