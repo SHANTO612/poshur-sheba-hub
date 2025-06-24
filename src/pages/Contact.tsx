@@ -37,7 +37,7 @@ const Contact = () => {
             {t('contact.title')}
           </h1>
           <p className="text-lg text-gray-600">
-            Get in touch with the Poshur Sheba team
+            Get in touch with the CattleBase team
           </p>
         </div>
 
@@ -68,7 +68,7 @@ const Contact = () => {
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="+880 1711-123456"
+                      placeholder="+880 1787935543"
                     />
                   </div>
                 </div>
@@ -144,7 +144,7 @@ const Contact = () => {
                     <h4 className="font-medium">Phone & Mobile</h4>
                     <p className="text-gray-600">
                       +880 2-9876-5432<br />
-                      +880 1711-123456
+                      +880 1787935543
                     </p>
                   </div>
                 </div>

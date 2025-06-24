@@ -21,7 +21,7 @@ const Navbar = () => {
             </div>
             <div className="hidden sm:block">
               <h1 className="text-xl font-bold text-green-800">
-                {language === 'en' ? 'Poshur Sheba' : 'পশুর সেবা'}
+                {language === 'en' ? 'CattleBase' : 'ক্যাটেল বেস'}
               </h1>
             </div>
           </Link>
