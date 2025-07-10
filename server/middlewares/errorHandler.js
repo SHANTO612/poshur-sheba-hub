@@ -1,5 +1,13 @@
 const errorHandler = (err, req, res, next) => {
   console.error("Error:", err.stack)
+  console.error("Request URL:", req.url)
+  console.error("Request Method:", req.method)
+  console.error("Request Headers:", req.headers)
+
+  // Ensure response hasn't been sent yet
+  if (res.headersSent) {
+    return next(err)
+  }
 
   // Mongoose validation error
   if (err.name === "ValidationError") {
@@ -23,6 +31,14 @@ const errorHandler = (err, req, res, next) => {
     return res.status(401).json({
       success: false,
       message: "Token expired",
+    })
+  }
+
+  // MongoDB connection errors
+  if (err.name === "MongoNetworkError" || err.name === "MongoServerSelectionError") {
+    return res.status(503).json({
+      success: false,
+      message: "Database connection error",
     })
   }
 

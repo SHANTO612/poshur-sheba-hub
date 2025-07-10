@@ -3,9 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "main": "server.js",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "build": "echo 'No build step required'",
     "seed": "node scripts/seedDatabase.js",
     "create-admin": "node scripts/createAdmin.js",
     "create-test-data": "node scripts/createTestData.js",
