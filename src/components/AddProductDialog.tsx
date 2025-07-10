@@ -44,6 +44,70 @@ const AddProductDialog = ({ onProductAdded, product, onProductUpdated }: AddProd
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Add section state
+  const [section, setSection] = useState<string>('');
+
+  // Section options
+  const sectionOptions = [
+    { value: 'meat', label: 'Halal Meat Shop' },
+    { value: 'dairy', label: 'Dairy Product' },
+    { value: 'feed_equipment', label: 'Feed & Equipment' },
+  ];
+
+  // Category options by section
+  const categoryOptions: Record<string, { value: string; label: string }[]> = {
+    meat: [
+      { value: 'beef', label: 'Beef' },
+      { value: 'mutton', label: 'Mutton' },
+      { value: 'chicken', label: 'Chicken' },
+      { value: 'buffalo', label: 'Buffalo' },
+      { value: 'organ', label: 'Organ' },
+      { value: 'bone', label: 'Bone' },
+    ],
+    dairy: [
+      { value: 'milk', label: 'Milk' },
+      { value: 'yogurt', label: 'Yogurt' },
+      { value: 'cheese', label: 'Cheese' },
+      { value: 'butter', label: 'Butter' },
+      { value: 'ghee', label: 'Ghee' },
+      { value: 'cream', label: 'Cream' },
+    ],
+    feed_equipment: [
+      { value: 'feed', label: 'Feed' },
+      { value: 'supplement', label: 'Supplement' },
+      { value: 'seed', label: 'Seed' },
+      { value: 'equipment', label: 'Equipment' },
+      { value: 'tool', label: 'Tool' },
+      { value: 'machine', label: 'Machine' },
+    ],
+  };
+
+  // Type options by section
+  const typeOptions: Record<string, { value: string; label: string }[]> = {
+    meat: [
+      { value: 'meat', label: 'Meat' },
+      { value: 'organ', label: 'Organ' },
+      { value: 'bone', label: 'Bone' },
+      { value: 'processed', label: 'Processed' },
+    ],
+    dairy: [
+      { value: 'dairy', label: 'Dairy' },
+    ],
+    feed_equipment: [
+      { value: 'feed', label: 'Feed' },
+      { value: 'equipment', label: 'Equipment' },
+    ],
+  };
+
+  // When section changes, reset category/type
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      category: '',
+      type: '',
+    }));
+  }, [section]);
+
   // Prefill form if editing
   const initialFormData: ProductFormData = product ? {
     name: product.name || '',
@@ -72,6 +136,19 @@ const AddProductDialog = ({ onProductAdded, product, onProductUpdated }: AddProd
   };
 
   const [formData, setFormData] = useState<ProductFormData>(initialFormData);
+
+  // Set section based on product category when editing
+  useEffect(() => {
+    if (product && product.category) {
+      if (['beef', 'mutton', 'chicken', 'buffalo', 'organ', 'bone'].includes(product.category)) {
+        setSection('meat');
+      } else if (['milk', 'yogurt', 'cheese', 'butter', 'ghee', 'cream'].includes(product.category)) {
+        setSection('dairy');
+      } else if (['feed', 'supplement', 'seed', 'equipment', 'tool', 'machine'].includes(product.category)) {
+        setSection('feed_equipment');
+      }
+    }
+  }, [product]);
 
   // Prefill image URLs if editing
   useEffect(() => {
@@ -262,6 +339,66 @@ const AddProductDialog = ({ onProductAdded, product, onProductUpdated }: AddProd
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Section Selector */}
+          <div>
+            <Label htmlFor="section">Section *</Label>
+            <Select value={section} onValueChange={setSection} required disabled={!!product}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select section" />
+              </SelectTrigger>
+              <SelectContent>
+                {sectionOptions.map(opt => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {product && (
+              <p className="text-xs text-gray-600 mt-1">
+                Section cannot be changed for existing products
+              </p>
+            )}
+          </div>
+
+          {/* Category Selector (filtered by section) */}
+          <div>
+            <Label htmlFor="category">Category *</Label>
+            <Select
+              value={formData.category}
+              onValueChange={value => handleInputChange('category', value)}
+              required
+              disabled={!section}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {(categoryOptions[section] || []).map(opt => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Type Selector (filtered by section) */}
+          <div>
+            <Label htmlFor="type">Type *</Label>
+            <Select
+              value={formData.type}
+              onValueChange={value => handleInputChange('type', value)}
+              required
+              disabled={!section}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                {(typeOptions[section] || []).map(opt => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -284,62 +421,6 @@ const AddProductDialog = ({ onProductAdded, product, onProductUpdated }: AddProd
                 placeholder="e.g., ৳650/kg"
                 required
               />
-            </div>
-
-            <div>
-              <Label htmlFor="category">Category *</Label>
-              <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="beef">Beef</SelectItem>
-                  <SelectItem value="mutton">Mutton</SelectItem>
-                  <SelectItem value="chicken">Chicken</SelectItem>
-                  <SelectItem value="buffalo">Buffalo</SelectItem>
-                  <SelectItem value="organ">Organ</SelectItem>
-                  <SelectItem value="bone">Bone</SelectItem>
-                  <SelectItem value="milk">Milk</SelectItem>
-                  <SelectItem value="yogurt">Yogurt</SelectItem>
-                  <SelectItem value="cheese">Cheese</SelectItem>
-                  <SelectItem value="butter">Butter</SelectItem>
-                  <SelectItem value="ghee">Ghee</SelectItem>
-                  <SelectItem value="cream">Cream</SelectItem>
-                  <SelectItem value="feed">Feed</SelectItem>
-                  <SelectItem value="supplement">Supplement</SelectItem>
-                  <SelectItem value="seed">Seed</SelectItem>
-                  <SelectItem value="equipment">Equipment</SelectItem>
-                  <SelectItem value="tool">Tool</SelectItem>
-                  <SelectItem value="machine">Machine</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="type">Type *</Label>
-              <Select value={formData.type} onValueChange={(value) => handleInputChange('type', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="meat">Meat</SelectItem>
-                  <SelectItem value="organ">Organ</SelectItem>
-                  <SelectItem value="bone">Bone</SelectItem>
-                  <SelectItem value="processed">Processed</SelectItem>
-                  <SelectItem value="dairy">Dairy</SelectItem>
-                  <SelectItem value="feed">Feed</SelectItem>
-                  <SelectItem value="equipment">Equipment</SelectItem>
-                </SelectContent>
-              </Select>
-              {['milk', 'yogurt', 'cheese', 'butter', 'ghee', 'cream'].includes(formData.category) && (
-                <p className="text-sm text-blue-600 mt-1">Type automatically set to "Dairy" for dairy products</p>
-              )}
-              {['feed', 'supplement', 'seed'].includes(formData.category) && (
-                <p className="text-sm text-green-600 mt-1">Type automatically set to "Feed" for feed products</p>
-              )}
-              {['equipment', 'tool', 'machine'].includes(formData.category) && (
-                <p className="text-sm text-orange-600 mt-1">Type automatically set to "Equipment" for equipment products</p>
-              )}
             </div>
 
             <div>
@@ -413,16 +494,19 @@ const AddProductDialog = ({ onProductAdded, product, onProductUpdated }: AddProd
 
           {/* Checkboxes */}
           <div className="space-y-3">
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="halal"
-                checked={formData.halal}
-                onChange={(e) => handleInputChange('halal', e.target.checked)}
-                className="rounded"
-              />
-              <Label htmlFor="halal">Halal Certified</Label>
-            </div>
+            {/* Only show halal checkbox for meat and dairy sections */}
+            {(section === 'meat' || section === 'dairy') && (
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="halal"
+                  checked={formData.halal}
+                  onChange={(e) => handleInputChange('halal', e.target.checked)}
+                  className="rounded"
+                />
+                <Label htmlFor="halal">Halal Certified</Label>
+              </div>
+            )}
             
             <div className="flex items-center space-x-2">
               <input

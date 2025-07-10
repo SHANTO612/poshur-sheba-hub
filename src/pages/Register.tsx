@@ -10,6 +10,8 @@ import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+
 const Register = () => {
   const { t } = useLanguage();
   const { login } = useAuth();
@@ -86,7 +88,7 @@ const Register = () => {
 
     try {
       console.log('Sending registration data:', submitData);
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

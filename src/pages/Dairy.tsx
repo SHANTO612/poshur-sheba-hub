@@ -8,7 +8,7 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, Trash2 } from 'lucide-react';
 import AddProductDialog from '../components/AddProductDialog';
 import Cart from '../components/Cart';
 import { toast } from '../components/ui/sonner';
@@ -26,6 +26,8 @@ const Dairy = () => {
   const [selectedSeller, setSelectedSeller] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -33,8 +35,8 @@ const Dairy = () => {
         
         // Fetch dairy products and sellers in parallel
         const [productsResponse, sellersResponse] = await Promise.all([
-          fetch('/api/products?type=dairy'),
-          fetch('/api/sellers')
+          fetch(`${API_BASE_URL}/products?type=dairy`),
+          fetch(`${API_BASE_URL}/sellers`)
         ]);
 
         const productsResult = await productsResponse.json();
@@ -64,7 +66,7 @@ const Dairy = () => {
 
   const handleProductAdded = () => {
     // Refresh products when a new one is added
-    fetch('/api/products?type=dairy')
+    fetch(`${API_BASE_URL}/products?type=dairy`)
       .then(res => res.json())
       .then(result => {
         if (result.success) {
@@ -74,6 +76,47 @@ const Dairy = () => {
       .catch(error => {
         console.error("Error refreshing products:", error);
       });
+  };
+
+  const handleProductDeleted = () => {
+    // Refresh products when one is deleted
+    fetch(`${API_BASE_URL}/products?type=dairy`)
+      .then(res => res.json())
+      .then(result => {
+        if (result.success) {
+          setProducts(result.data);
+        }
+      })
+      .catch(error => {
+        console.error("Error refreshing products:", error);
+      });
+  };
+
+  const handleDeleteProduct = async (productId: string) => {
+    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/products/${productId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success('Product deleted successfully!');
+        handleProductDeleted();
+      } else {
+        toast.error(result.message || 'Failed to delete product');
+      }
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast.error('Failed to delete product. Please try again.');
+    }
   };
 
   const handleAddToCart = (product) => {
@@ -98,13 +141,18 @@ const Dairy = () => {
     toast.success(`${product.name} added to cart!`);
   };
 
+  const dairyCategories = [
+    'milk', 'yogurt', 'cheese', 'butter', 'ghee', 'cream'
+  ];
+
   const filteredProducts = products.filter(product => {
+    const matchesSection = dairyCategories.includes(product.category);
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
     const matchesSeller = selectedSeller === 'all' || product.seller?._id === selectedSeller;
     
-    return matchesSearch && matchesCategory && matchesSeller;
+    return matchesSection && matchesSearch && matchesCategory && matchesSeller;
   });
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
@@ -250,9 +298,7 @@ const Dairy = () => {
                         }}
                       />
                     ) : null}
-                    <div className="w-full h-full flex items-center justify-center">
-                      <div className="text-5xl">🥛</div>
-                    </div>
+                   
                     {product.halal && (
                       <Badge className="absolute top-2 right-2 bg-green-600 text-white">
                         Halal
@@ -286,6 +332,24 @@ const Dairy = () => {
                       >
                         Add to Cart
                       </Button>
+                    )}
+                    {/* Edit and Delete buttons for seller */}
+                    {isAuthenticated && user?._id === product.seller?._id && (
+                      <div className="flex gap-2 mt-2">
+                        <AddProductDialog
+                          product={product}
+                          onProductUpdated={handleProductAdded}
+                        />
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteProduct(product._id)}
+                          className="flex-1"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </Button>
+                      </div>
                     )}
                   </CardContent>
                 </Card>

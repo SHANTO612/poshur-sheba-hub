@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -22,11 +22,6 @@ interface CattleFormData {
   price: string;
   type: string;
   description: string;
-  location: string;
-  contact: string;
-  gender: string;
-  vaccinated: boolean;
-  healthStatus: string;
 }
 
 const AddCattleDialog = ({ onCattleAdded }: AddCattleDialogProps) => {
@@ -46,12 +41,19 @@ const AddCattleDialog = ({ onCattleAdded }: AddCattleDialogProps) => {
     price: '',
     type: '',
     description: '',
-    location: '',
-    contact: '',
-    gender: '',
-    vaccinated: false,
-    healthStatus: 'good',
   });
+
+  // Pre-fill description with template when dialog opens
+  useEffect(() => {
+    if (isOpen && user) {
+      setFormData(prev => ({
+        ...prev,
+        description: user.speciality ? 
+          `Healthy ${user.speciality.toLowerCase()} cattle. Well-maintained and properly cared for. Contact for more details.` : 
+          'Healthy cattle available for sale. Well-maintained and properly cared for. Contact for more details.',
+      }));
+    }
+  }, [isOpen, user]);
 
   const handleInputChange = (field: keyof CattleFormData, value: string | boolean) => {
     setFormData(prev => ({
@@ -164,11 +166,6 @@ const AddCattleDialog = ({ onCattleAdded }: AddCattleDialogProps) => {
       price: '',
       type: '',
       description: '',
-      location: '',
-      contact: '',
-      gender: '',
-      vaccinated: false,
-      healthStatus: 'good',
     });
     setImages([]);
     setImageUrls([]);
@@ -192,6 +189,9 @@ const AddCattleDialog = ({ onCattleAdded }: AddCattleDialogProps) => {
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Cattle Listing</DialogTitle>
+          <p className="text-sm text-gray-600 mt-2">
+            Location and contact information will be automatically added from your profile.
+          </p>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -235,19 +235,6 @@ const AddCattleDialog = ({ onCattleAdded }: AddCattleDialogProps) => {
             </div>
 
             <div>
-              <Label htmlFor="gender">Gender</Label>
-              <Select value={formData.gender} onValueChange={(value) => handleInputChange('gender', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
               <Label htmlFor="weight">Weight *</Label>
               <Input
                 id="weight"
@@ -279,45 +266,6 @@ const AddCattleDialog = ({ onCattleAdded }: AddCattleDialogProps) => {
                 required
               />
             </div>
-
-            <div>
-              <Label htmlFor="healthStatus">Health Status</Label>
-              <Select value={formData.healthStatus} onValueChange={(value) => handleInputChange('healthStatus', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select health status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="excellent">Excellent</SelectItem>
-                  <SelectItem value="good">Good</SelectItem>
-                  <SelectItem value="fair">Fair</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Location and Contact */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="location">Location *</Label>
-              <Input
-                id="location"
-                value={formData.location}
-                onChange={(e) => handleInputChange('location', e.target.value)}
-                placeholder="e.g., Chittagong"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="contact">Contact *</Label>
-              <Input
-                id="contact"
-                value={formData.contact}
-                onChange={(e) => handleInputChange('contact', e.target.value)}
-                placeholder="e.g., +880 1234-567891"
-                required
-              />
-            </div>
           </div>
 
           {/* Description */}
@@ -330,19 +278,13 @@ const AddCattleDialog = ({ onCattleAdded }: AddCattleDialogProps) => {
               placeholder="Describe the cattle, its characteristics, and any special features..."
               rows={4}
               required
+              className={user?.speciality ? "bg-gray-50" : ""}
             />
-          </div>
-
-          {/* Vaccination Status */}
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="vaccinated"
-              checked={formData.vaccinated}
-              onChange={(e) => handleInputChange('vaccinated', e.target.checked)}
-              className="rounded"
-            />
-            <Label htmlFor="vaccinated">Vaccinated</Label>
+            {user?.speciality && (
+              <p className="text-xs text-blue-600 mt-1">
+                Template pre-filled based on your speciality
+              </p>
+            )}
           </div>
 
           {/* Image Upload */}

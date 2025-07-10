@@ -17,11 +17,31 @@ const Contact = () => {
     subject: '',
     message: ''
   });
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>("idle");
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Contact form submitted:', formData);
-    // Form submission logic will be implemented later
+    setStatus('loading');
+    setErrorMsg("");
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (res.ok) {
+        setStatus('success');
+        setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+      } else {
+        const data = await res.json();
+        setErrorMsg(data.error || 'Failed to send message.');
+        setStatus('error');
+      }
+    } catch (err) {
+      setErrorMsg('Failed to send message.');
+      setStatus('error');
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -48,6 +68,12 @@ const Contact = () => {
               <CardTitle className="text-xl text-green-800">Send us a Message</CardTitle>
             </CardHeader>
             <CardContent>
+              {status === 'success' && (
+                <div className="mb-4 text-green-700 font-medium">Message sent successfully!</div>
+              )}
+              {status === 'error' && (
+                <div className="mb-4 text-red-600 font-medium">{errorMsg}</div>
+              )}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>

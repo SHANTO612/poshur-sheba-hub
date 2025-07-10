@@ -7,21 +7,25 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Badge } from '../components/ui/badge';
-import { Search, MapPin, Phone } from 'lucide-react';
+import { Search, MapPin, Phone, Trash2 } from 'lucide-react';
 import AddCattleDialog from '../components/AddCattleDialog';
+import { toast } from '../components/ui/sonner';
 
 const Market = () => {
   const { t } = useLanguage();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, token } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBreed, setSelectedBreed] = useState('all');
   const [cattleData, setCattleData] = useState([]);
   const [filteredCattle, setFilteredCattle] = useState([]);
   const [breeds, setBreeds] = useState([]);
+  const [deleteLoading, setDeleteLoading] = useState({});
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
   const fetchCattle = async () => {
     try {
-      const response = await fetch('/api/cattle');
+      const response = await fetch(`${API_BASE_URL}/cattle`);
       const result = await response.json();
       if (result.success) {
         setCattleData(result.data);
@@ -61,6 +65,43 @@ const Market = () => {
   const handleCattleAdded = () => {
     // Refresh the cattle data
     fetchCattle();
+  };
+
+  const handleDeleteCattle = async (cattleId: string) => {
+    if (!confirm('Are you sure you want to delete this cattle listing? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setDeleteLoading(prev => ({ ...prev, [cattleId]: true }));
+      
+      const response = await fetch(`${API_BASE_URL}/cattle/${cattleId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success('Cattle listing deleted successfully!');
+        fetchCattle(); // Refresh the list
+      } else {
+        toast.error(result.message || 'Failed to delete cattle listing');
+      }
+    } catch (error) {
+      console.error('Error deleting cattle:', error);
+      toast.error('Failed to delete cattle listing. Please try again.');
+    } finally {
+      setDeleteLoading(prev => ({ ...prev, [cattleId]: false }));
+    }
+  };
+
+  const canDeleteCattle = (cattle) => {
+    return isAuthenticated && 
+           user?.userType === 'farmer' && 
+           cattle.seller === user._id;
   };
 
   return (
@@ -115,7 +156,7 @@ const Market = () => {
         {/* Cattle Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCattle.map((cattle) => (
-            <Card key={cattle.id} className="hover:shadow-lg transition-shadow">
+            <Card key={cattle._id || cattle.id} className="hover:shadow-lg transition-shadow">
               <div className="h-48 bg-gradient-to-br from-green-100 to-amber-100 rounded-t-lg overflow-hidden">
                 {cattle.images && cattle.images.length > 0 ? (
                   <img
@@ -136,7 +177,23 @@ const Market = () => {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-lg">{cattle.name}</CardTitle>
-                  <Badge variant="secondary">{cattle.breed}</Badge>
+                  <div className="flex gap-2">
+                    <Badge variant="secondary">{cattle.breed}</Badge>
+                    {canDeleteCattle(cattle) && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteCattle(cattle._id || cattle.id)}
+                        disabled={deleteLoading[cattle._id || cattle.id]}
+                      >
+                        {deleteLoading[cattle._id || cattle.id] ? (
+                          'Deleting...'
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>

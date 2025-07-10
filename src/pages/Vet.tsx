@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { MapPin, Phone, Clock, User } from 'lucide-react';
+import StarRating from '../components/StarRating';
+import RatingDialog from '../components/RatingDialog';
 
 const Vet = () => {
   const { t } = useLanguage();
@@ -12,11 +14,13 @@ const Vet = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+
   useEffect(() => {
     const fetchVeterinarians = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/veterinarians');
+        const response = await fetch(`${API_BASE_URL}/veterinarians`);
         const result = await response.json();
         if (result.success) {
           setVeterinarians(result.data);
@@ -33,6 +37,20 @@ const Vet = () => {
 
     fetchVeterinarians();
   }, []);
+
+  const handleRatingSubmitted = () => {
+    // Refresh veterinarians to get updated ratings
+    fetch(`${API_BASE_URL}/veterinarians`)
+      .then(res => res.json())
+      .then(result => {
+        if (result.success) {
+          setVeterinarians(result.data);
+        }
+      })
+      .catch(error => {
+        console.error("Error refreshing veterinarians:", error);
+      });
+  };
 
   if (loading) {
     return (
@@ -83,6 +101,9 @@ const Vet = () => {
               <CardHeader>
                 <CardTitle className="text-lg">{vet.name}</CardTitle>
                 <p className="text-blue-600 font-medium">{vet.clinicName}</p>
+                <div className="flex items-center gap-2">
+                  <StarRating rating={vet.rating || 0} size="sm" showText={true} />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -106,14 +127,20 @@ const Vet = () => {
                     <div className="text-sm text-gray-600">
                       <p><strong>Experience:</strong> {vet.experience}</p>
                       <p><strong>License:</strong> {vet.licenseNumber}</p>
-                      <p><strong>Rating:</strong> ⭐ {vet.rating}/5</p>
                     </div>
                   </div>
                 </div>
 
-                <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700">
-                  Contact Veterinarian
-                </Button>
+                <div className="flex gap-2 mt-4">
+                  <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
+                    Contact Veterinarian
+                  </Button>
+                  <RatingDialog
+                    veterinarianId={vet._id}
+                    veterinarianName={vet.name}
+                    onRatingSubmitted={handleRatingSubmitted}
+                  />
+                </div>
               </CardContent>
             </Card>
           ))}

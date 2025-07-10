@@ -5,7 +5,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "seed": "node scripts/seedDatabase.js",
+    "create-admin": "node scripts/createAdmin.js",
+    "create-test-data": "node scripts/createTestData.js",
+    "check-admin": "node scripts/checkAdmin.js",
+    "test-admin-auth": "node scripts/testAdminAuth.js"
   },
   "dependencies": {
     "bcryptjs": "latest",
@@ -17,6 +22,7 @@
     "mongoose": "latest",
     "multer": "latest",
     "multer-storage-cloudinary": "latest",
+    "nodemailer": "^7.0.5",
     "path": "latest"
   },
   "devDependencies": {

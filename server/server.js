@@ -13,6 +13,8 @@ const sellerRoutes = require("./routes/sellers")
 const productRoutes = require("./routes/products")
 const newsRoutes = require("./routes/news")
 const statsRoutes = require("./routes/stats")
+const ratingRoutes = require("./routes/ratings")
+const adminRoutes = require("./routes/admin")
 
 // Import middlewares
 const errorHandler = require("./middlewares/errorHandler")
@@ -57,6 +59,9 @@ app.use("/api/sellers", sellerRoutes)
 app.use("/api/products", productRoutes)
 app.use("/api/news", newsRoutes)
 app.use("/api/stats", statsRoutes)
+app.use("/api/ratings", ratingRoutes)
+app.use("/api/admin", adminRoutes)
+app.use("/api/contact", require("./routes/contact"))
 
 // Error handling middleware
 app.use(errorHandler)

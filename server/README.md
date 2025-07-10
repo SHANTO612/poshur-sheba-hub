@@ -356,3 +356,72 @@ const createCattle = async (cattleData, images) => {
 \`\`\`
 
 The server is now production-ready with complete database integration and professional image management!
+
+## 🚀 Quick Start
+
+1. **Install dependencies:**
+\`\`\`bash
+npm install
+\`\`\`
+
+2. **Set up environment variables:**
+Create a \`.env\` file with your configuration (see Environment Variables section below)
+
+3. **Clear database (optional):**
+\`\`\`bash
+npm run seed
+\`\`\`
+This will clear all existing data and prepare the database for real data.
+
+4. **Start development server:**
+\`\`\`bash
+npm run dev
+\`\`\`
+
+## 📝 Database Status
+
+The database is currently **empty** and ready for real data. Users can:
+- Register as farmers, sellers, veterinarians, or buyers
+- Add cattle listings with images
+- Add products (meat, dairy, feed, equipment)
+- Add news articles
+- Rate veterinarians (farmers only)
+
+All dummy/sample data has been removed to make way for real user-generated content.
+
+## Contact Form Email Setup
+
+To enable the contact form to send emails, add the following to your `.env` file:
+
+```
+GMAIL_USER=your_gmail_address@gmail.com
+GMAIL_PASS=your_gmail_app_password
+```
+
+- GMAIL_USER: The Gmail address you want to send from (e.g., shantocse612@gmail.com)
+- GMAIL_PASS: A Gmail App Password (not your regular password). Generate one from your Google Account > Security > App Passwords.
+
+## 👑 Admin Setup
+
+To create an admin user with full access to delete users, cattle, products, and other content:
+
+```bash
+npm run create-admin
+```
+
+This will create an admin user with:
+- Email: admin@cattlebes.com
+- Password: admin123456
+
+**Important:** Change the password after first login for security.
+
+### Admin Features:
+- **User Management:** View all users and delete non-admin users
+- **Content Management:** Delete cattle listings, products, news articles, and ratings
+- **Dashboard:** View platform statistics and user breakdown
+- **Security:** Admin users cannot delete other admin users
+
+### Admin Access:
+- Navigate to `/admin` in the frontend when logged in as admin
+- All admin operations require authentication and admin role
+- Admin routes are protected with middleware

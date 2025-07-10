@@ -59,9 +59,16 @@ const getCattleById = async (req, res) => {
 
 const createCattle = async (req, res) => {
   try {
+    // Get the current user's profile to extract location and contact info
+    const User = require("../models/User")
+    const currentUser = await User.findById(req.user._id)
+    
     const cattleData = {
       ...req.body,
       seller: req.user._id,
+      // Automatically add location and contact from farmer's profile
+      location: currentUser.location || '',
+      contact: currentUser.phone || '',
     }
 
     // Extract numeric price from price string (remove currency symbols and commas)

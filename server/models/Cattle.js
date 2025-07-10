@@ -58,12 +58,10 @@ const cattleSchema = new mongoose.Schema(
     ],
     location: {
       type: String,
-      required: [true, "Location is required"],
       trim: true,
     },
     contact: {
       type: String,
-      required: [true, "Contact is required"],
       trim: true,
     },
     status: {
@@ -83,20 +81,6 @@ const cattleSchema = new mongoose.Schema(
     featured: {
       type: Boolean,
       default: false,
-    },
-    // Additional fields for better categorization
-    gender: {
-      type: String,
-      enum: ["male", "female"],
-    },
-    vaccinated: {
-      type: Boolean,
-      default: false,
-    },
-    healthStatus: {
-      type: String,
-      enum: ["excellent", "good", "fair"],
-      default: "good",
     },
   },
   {

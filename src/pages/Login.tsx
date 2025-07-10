@@ -8,6 +8,8 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+
 const Login = () => {
   const { t } = useLanguage();
   const { login } = useAuth();
@@ -18,7 +20,7 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

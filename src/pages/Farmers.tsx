@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { MapPin, Phone, User } from 'lucide-react';
-import farmersData from '../data/farmers.json';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const Farmers = () => {
   const { t } = useLanguage();
@@ -14,9 +15,10 @@ const Farmers = () => {
 
   useEffect(() => {
     const fetchFarmers = async () => {
+      setIsLoading(true);
       try {
         console.log('Fetching farmers data...');
-        const response = await fetch('/api/farmers');
+        const response = await fetch(`${API_BASE_URL}/farmers`);
         console.log('Response status:', response.status);
         const result = await response.json();
         console.log('Farmers data result:', result);
@@ -24,13 +26,11 @@ const Farmers = () => {
           setFarmersData(result.data);
         } else {
           console.error("Error in response:", result.message);
-          // Fallback to static data
-          setFarmersData(farmersData);
+          setFarmersData([]);
         }
       } catch (error) {
         console.error("Error fetching farmers data:", error);
-        // Fallback to static data
-        setFarmersData(farmersData);
+        setFarmersData([]);
       } finally {
         setIsLoading(false);
       }
@@ -39,78 +39,92 @@ const Farmers = () => {
     fetchFarmers();
   }, []);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen py-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              {t('farmers.title')}
+            </h1>
+            <p className="text-lg text-gray-600 mb-8">
+              Loading farmers...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             {t('farmers.title')}
           </h1>
           <p className="text-lg text-gray-600">
-            Connect with experienced farmers and farm owners across Bangladesh
+            Connect with experienced farmers and livestock experts
           </p>
         </div>
 
-        {/* Loading State */}
-        {isLoading && (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading farmers...</p>
-          </div>
-        )}
-
         {/* Farmers Grid */}
-        {!isLoading && (
-          <>
-            {farmersData.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">No farmers found.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {farmersData.map((farmer) => (
-                  <Card key={farmer.id} className="hover:shadow-lg transition-shadow">
-                    <div className="h-32 bg-gradient-to-br from-amber-100 to-green-100 rounded-t-lg flex items-center justify-center">
-                      <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center">
-                        <User className="h-8 w-8 text-white" />
-                      </div>
+        {farmersData.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-gray-500 text-lg mb-4">
+              No farmers available at the moment.
+            </div>
+            <p className="text-gray-400">
+              Farmers will appear here once they register and add their profiles.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {farmersData.map((farmer) => (
+              <Card key={farmer._id || farmer.id} className="shadow-lg hover:shadow-xl transition-shadow">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg text-green-800">{farmer.name}</CardTitle>
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      {farmer.rating ? `${farmer.rating}★` : 'New'}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-600">{farmer.farmName}</p>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-start gap-2">
+                    <MapPin className="h-4 w-4 text-green-600 mt-0.5" />
+                    <span className="text-sm text-gray-600">{farmer.location}</span>
+                  </div>
+                  
+                  <div className="flex items-start gap-2">
+                    <User className="h-4 w-4 text-green-600 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="text-gray-600"><span className="font-medium">Speciality:</span> {farmer.speciality}</p>
+                      <p className="text-gray-600"><span className="font-medium">Experience:</span> {farmer.experience}</p>
                     </div>
-                    <CardHeader>
-                      <CardTitle className="text-lg">{farmer.name}</CardTitle>
-                      <p className="text-green-600 font-medium">{farmer.farmName}</p>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <MapPin className="h-4 w-4" />
-                          <span>{farmer.location}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Phone className="h-4 w-4" />
-                          <span>{farmer.mobile}</span>
-                        </div>
-                        
-                        <div className="pt-2">
-                          <Badge variant="outline" className="mb-2">
-                            {farmer.speciality}
-                          </Badge>
-                          <div className="text-sm text-gray-600">
-                            <p><strong>Experience:</strong> {farmer.experience}</p>
-                            <p><strong>Livestock:</strong> {farmer.livestock}</p>
-                          </div>
-                        </div>
-                      </div>
+                  </div>
 
-                      <Button className="w-full mt-4 bg-green-600 hover:bg-green-700">
-                        Contact Farmer
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </>
+                  <div className="text-sm text-gray-600">
+                    <p><span className="font-medium">Livestock:</span> {farmer.livestock}</p>
+                    {farmer.totalSales && (
+                      <p><span className="font-medium">Total Sales:</span> {farmer.totalSales}</p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2">
+                    <Phone className="h-4 w-4 text-green-600" />
+                    <span className="text-sm text-gray-600">{farmer.mobile}</span>
+                  </div>
+
+                  <Button className="w-full bg-green-600 hover:bg-green-700">
+                    Contact Farmer
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
       </div>
     </div>
