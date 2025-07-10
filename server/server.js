@@ -4,6 +4,13 @@ const cors = require("cors")
 const path = require("path")
 const connectDB = require("./config/database")
 
+console.log('🚀 Starting application...')
+console.log('📊 Environment check:')
+console.log('  - NODE_ENV:', process.env.NODE_ENV || 'Not set')
+console.log('  - PORT:', process.env.PORT || 'Not set (will use 3001)')
+console.log('  - MONGODB_URI:', process.env.MONGODB_URI ? 'Set' : 'NOT SET - This will cause failure!')
+console.log('  - JWT_SECRET:', process.env.JWT_SECRET ? 'Set' : 'NOT SET - This will cause failure!')
+
 // Import routes
 const authRoutes = require("./routes/auth")
 const cattleRoutes = require("./routes/cattle")
@@ -23,15 +30,7 @@ const corsConfig = require("./middlewares/cors")
 const app = express()
 const PORT = process.env.PORT || 3001
 
-console.log('🚀 Starting server...')
-console.log('📊 Environment variables:')
-console.log('  - PORT:', process.env.PORT || 'Not set (using 3001)')
-console.log('  - NODE_ENV:', process.env.NODE_ENV || 'Not set')
-console.log('  - MONGODB_URI:', process.env.MONGODB_URI ? 'Set' : 'Not set')
-console.log('  - JWT_SECRET:', process.env.JWT_SECRET ? 'Set' : 'Not set')
-
-// Connect to MongoDB
-connectDB()
+console.log('🔧 Setting up middleware...')
 
 // Middlewares
 app.use(corsConfig)
@@ -43,6 +42,19 @@ app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
+
+console.log('✅ Middleware setup complete')
+
+// Connect to MongoDB with error handling
+console.log('🔗 Attempting to connect to MongoDB...')
+try {
+  const connectDB = require("./config/database")
+  connectDB()
+  console.log('✅ MongoDB connection initiated')
+} catch (error) {
+  console.error('❌ Failed to load database config:', error.message)
+  process.exit(1)
+}
 
 // Routes
 
@@ -105,7 +117,13 @@ app.get("/test", (req, res) => {
   }
 })
 
+// Simple ping route
+app.get("/ping", (req, res) => {
+  res.json({ message: "pong", timestamp: new Date().toISOString() })
+})
+
 // API Routes
+console.log('🔧 Registering API routes...')
 try {
   app.use("/api/auth", authRoutes)
   app.use("/api/cattle", cattleRoutes)
@@ -132,6 +150,7 @@ app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route not found" })
 })
 
+console.log('🚀 Starting server...')
 
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
