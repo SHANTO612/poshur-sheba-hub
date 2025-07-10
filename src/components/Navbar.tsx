@@ -1,11 +1,13 @@
 
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import { Button } from './ui/button';
-import { Home, User, LogIn } from 'lucide-react';
+import { Home, User, LogIn, LogOut } from 'lucide-react';
 
 const Navbar = () => {
   const { language, setLanguage, t } = useLanguage();
+  const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
@@ -97,18 +99,39 @@ const Navbar = () => {
             </div>
 
             {/* Auth buttons */}
-            <Link to="/login">
-              <Button variant="outline" size="sm" className="hidden sm:flex items-center space-x-1">
-                <LogIn className="h-4 w-4" />
-                <span>{t('nav.login')}</span>
-              </Button>
-            </Link>
-            <Link to="/register">
-              <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                <User className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">{t('nav.register')}</span>
-              </Button>
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <div className="flex items-center space-x-3">
+                  <span className="text-sm font-medium text-green-700">
+                    Welcome, {user && user.name}!
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={logout}
+                    className="hidden sm:flex items-center space-x-1 border-green-200 text-green-700 hover:bg-green-50"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Logout</span>
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="outline" size="sm" className="hidden sm:flex items-center space-x-1">
+                    <LogIn className="h-4 w-4" />
+                    <span>{t('nav.login')}</span>
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                    <User className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">{t('nav.register')}</span>
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -1,62 +1,150 @@
 
+import { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
+import { Input } from '../components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Search, Filter } from 'lucide-react';
+import AddProductDialog from '../components/AddProductDialog';
+import Cart from '../components/Cart';
+import { toast } from '../components/ui/sonner';
 
 const Dairy = () => {
   const { t } = useLanguage();
+  const { user, isAuthenticated, token } = useAuth();
+  const { addToCart } = useCart();
+  const [products, setProducts] = useState([]);
+  const [sellers, setSellers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedSeller, setSelectedSeller] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
 
-  const dairyProducts = [
-    {
-      id: 1,
-      name: 'Fresh Milk',
-      price: '৳65/liter',
-      volume: '1 liter',
-      description: 'Pure fresh milk from local dairy farms',
-      organic: true
-    },
-    {
-      id: 2,
-      name: 'Yogurt',
-      price: '৳45/cup',
-      volume: '200g',
-      description: 'Creamy homemade yogurt with natural taste',
-      organic: false
-    },
-    {
-      id: 3,
-      name: 'Pure Ghee',
-      price: '৳850/kg',
-      volume: '500g',
-      description: 'Traditional clarified butter made from cow milk',
-      organic: true
-    },
-    {
-      id: 4,
-      name: 'Cottage Cheese',
-      price: '৳280/kg',
-      volume: '250g',
-      description: 'Fresh cottage cheese rich in protein',
-      organic: false
-    },
-    {
-      id: 5,
-      name: 'Butter',
-      price: '৳450/kg',
-      volume: '200g',
-      description: 'Creamy fresh butter made from pure cream',
-      organic: true
-    },
-    {
-      id: 6,
-      name: 'Cream',
-      price: '৳120/cup',
-      volume: '150ml',
-      description: 'Fresh dairy cream for cooking and desserts',
-      organic: false
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch dairy products and sellers in parallel
+        const [productsResponse, sellersResponse] = await Promise.all([
+          fetch('/api/products?type=dairy'),
+          fetch('/api/sellers')
+        ]);
+
+        const productsResult = await productsResponse.json();
+        const sellersResult = await sellersResponse.json();
+
+        if (productsResult.success) {
+          setProducts(productsResult.data);
+        } else {
+          console.error("Error fetching products:", productsResult.message);
+        }
+
+        if (sellersResult.success) {
+          setSellers(sellersResult.data);
+        } else {
+          console.error("Error fetching sellers:", sellersResult.message);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError('Could not connect to the server');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleProductAdded = () => {
+    // Refresh products when a new one is added
+    fetch('/api/products?type=dairy')
+      .then(res => res.json())
+      .then(result => {
+        if (result.success) {
+          setProducts(result.data);
+        }
+      })
+      .catch(error => {
+        console.error("Error refreshing products:", error);
+      });
+  };
+
+  const handleAddToCart = (product) => {
+    if (!isAuthenticated) {
+      toast.error('Please login to add items to cart');
+      return;
     }
-  ];
+
+    addToCart({
+      id: product._id,
+      name: product.name,
+      price: product.price,
+      priceNumeric: product.priceNumeric,
+      quantity: 1,
+      image: product.images?.[0]?.url,
+      seller: {
+        name: product.seller?.name || 'Unknown',
+        shopName: product.seller?.shopName || 'Unknown Shop'
+      }
+    });
+
+    toast.success(`${product.name} added to cart!`);
+  };
+
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+    const matchesSeller = selectedSeller === 'all' || product.seller?._id === selectedSeller;
+    
+    return matchesSearch && matchesCategory && matchesSeller;
+  });
+
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (sortBy) {
+      case 'price_low':
+        return a.priceNumeric - b.priceNumeric;
+      case 'price_high':
+        return b.priceNumeric - a.priceNumeric;
+      case 'name':
+        return a.name.localeCompare(b.name);
+      case 'newest':
+      default:
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+  });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading dairy products...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <p className="text-red-600">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-8">
@@ -71,34 +159,139 @@ const Dairy = () => {
           </p>
         </div>
 
-        {/* Dairy Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {dairyProducts.map((product) => (
-            <Card key={product.id} className="hover:shadow-lg transition-shadow">
-              <div className="h-40 bg-gradient-to-br from-blue-100 to-white rounded-t-lg flex items-center justify-center relative">
-                <div className="text-5xl">🥛</div>
-                {product.organic && (
-                  <Badge className="absolute top-2 right-2 bg-green-600 text-white">
-                    Organic
-                  </Badge>
-                )}
+        {/* Search and Filter Bar */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search dairy products..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-              <CardHeader>
-                <CardTitle className="text-lg">{product.name}</CardTitle>
-                <div className="flex justify-between items-center">
-                  <span className="text-xl font-bold text-blue-600">{product.price}</span>
-                  <span className="text-sm text-gray-500">{product.volume}</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">{product.description}</p>
-                
-                <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                  Add to Cart
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+            </div>
+            <div className="md:w-48">
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="milk">Milk</SelectItem>
+                  <SelectItem value="yogurt">Yogurt</SelectItem>
+                  <SelectItem value="cheese">Cheese</SelectItem>
+                  <SelectItem value="butter">Butter</SelectItem>
+                  <SelectItem value="ghee">Ghee</SelectItem>
+                  <SelectItem value="cream">Cream</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:w-48">
+              <Select value={selectedSeller} onValueChange={setSelectedSeller}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seller" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sellers</SelectItem>
+                  {sellers.map(seller => (
+                    <SelectItem key={seller._id} value={seller._id}>
+                      {seller.shopName || seller.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:w-48">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest</SelectItem>
+                  <SelectItem value="price_low">Price: Low to High</SelectItem>
+                  <SelectItem value="price_high">Price: High to Low</SelectItem>
+                  <SelectItem value="name">Name: A to Z</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2">
+              {isAuthenticated && user?.userType === 'seller' && (
+                <AddProductDialog onProductAdded={handleProductAdded} />
+              )}
+              <Cart />
+            </div>
+          </div>
+        </div>
+
+        {/* Dairy Products Grid */}
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Available Dairy Products</h2>
+          {sortedProducts.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">No dairy products found matching your criteria.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sortedProducts.map((product) => (
+                <Card key={product._id} className="hover:shadow-lg transition-shadow">
+                  <div className="h-40 bg-gradient-to-br from-blue-100 to-white rounded-t-lg flex items-center justify-center relative overflow-hidden">
+                    {product.images && product.images.length > 0 ? (
+                      <img
+                        src={product.images[0].url}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                    ) : null}
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="text-5xl">🥛</div>
+                    </div>
+                    {product.halal && (
+                      <Badge className="absolute top-2 right-2 bg-green-600 text-white">
+                        Halal
+                      </Badge>
+                    )}
+                  </div>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{product.name}</CardTitle>
+                    <p className="text-sm text-gray-600 font-medium">{product.seller?.shopName || 'Unknown Shop'}</p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xl font-bold text-blue-600">{product.price}</span>
+                      <span className="text-sm text-gray-500">{product.unit}</span>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600 mb-4 line-clamp-2">{product.description}</p>
+                    
+                    <div className="flex justify-between items-center mb-4">
+                      <span className={`text-sm ${product.available ? 'text-green-600' : 'text-red-600'}`}>
+                        {product.available ? 'In Stock' : 'Out of Stock'}
+                      </span>
+                      {product.stock > 0 && (
+                        <span className="text-sm text-gray-500">Stock: {product.stock}</span>
+                      )}
+                    </div>
+
+                    {product.available && (
+                      <Button 
+                        className="w-full bg-blue-600 hover:bg-blue-700"
+                        onClick={() => handleAddToCart(product)}
+                      >
+                        Add to Cart
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Information Section */}

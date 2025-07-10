@@ -1,30 +1,53 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Badge } from '../components/ui/badge';
 import { Search, MapPin, Phone } from 'lucide-react';
-import cattleData from '../data/cattle.json';
+import AddCattleDialog from '../components/AddCattleDialog';
 
 const Market = () => {
   const { t } = useLanguage();
+  const { user, isAuthenticated } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBreed, setSelectedBreed] = useState('all');
-  const [filteredCattle, setFilteredCattle] = useState(cattleData);
+  const [cattleData, setCattleData] = useState([]);
+  const [filteredCattle, setFilteredCattle] = useState([]);
+  const [breeds, setBreeds] = useState([]);
 
-  const breeds = [...new Set(cattleData.map(cattle => cattle.breed))];
+  const fetchCattle = async () => {
+    try {
+      const response = await fetch('/api/cattle');
+      const result = await response.json();
+      if (result.success) {
+        setCattleData(result.data);
+        setFilteredCattle(result.data);
+        const uniqueBreeds = [...new Set(result.data.map(cattle => cattle.breed))];
+        setBreeds(uniqueBreeds);
+      } else {
+        console.error("Error fetching cattle data:", result.message);
+      }
+    } catch (error) {
+      console.error("Error fetching cattle data:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCattle();
+  }, []);
 
   const handleSearch = () => {
     let filtered = cattleData;
 
     if (searchTerm) {
-      filtered = filtered.filter(cattle => 
+      filtered = filtered.filter(cattle =>
         cattle.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         cattle.breed.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cattle.seller.toLowerCase().includes(searchTerm.toLowerCase())
+        (cattle.seller?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -33,6 +56,11 @@ const Market = () => {
     }
 
     setFilteredCattle(filtered);
+  };
+
+  const handleCattleAdded = () => {
+    // Refresh the cattle data
+    fetchCattle();
   };
 
   return (
@@ -78,6 +106,9 @@ const Market = () => {
             <Button onClick={handleSearch} className="bg-green-600 hover:bg-green-700">
               Search
             </Button>
+            {isAuthenticated && user?.userType === 'farmer' && (
+              <AddCattleDialog onCattleAdded={handleCattleAdded} />
+            )}
           </div>
         </div>
 
@@ -85,8 +116,22 @@ const Market = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCattle.map((cattle) => (
             <Card key={cattle.id} className="hover:shadow-lg transition-shadow">
-              <div className="h-48 bg-gradient-to-br from-green-100 to-amber-100 rounded-t-lg flex items-center justify-center">
-                <div className="text-6xl">🐄</div>
+              <div className="h-48 bg-gradient-to-br from-green-100 to-amber-100 rounded-t-lg overflow-hidden">
+                {cattle.images && cattle.images.length > 0 ? (
+                  <img
+                    src={cattle.images[0].url}
+                    alt={cattle.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                ) : null}
+                <div className="w-full h-full flex items-center justify-center hidden">
+                  <div className="text-6xl">🐄</div>
+                </div>
               </div>
               <CardHeader>
                 <div className="flex justify-between items-start">
@@ -114,7 +159,7 @@ const Market = () => {
                   <h4 className="font-medium mb-2">Seller Information</h4>
                   <div className="space-y-1 text-sm">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{cattle.seller}</span>
+                      <span className="font-medium">{cattle.seller?.name || "Unknown"}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
                       <MapPin className="h-4 w-4" />

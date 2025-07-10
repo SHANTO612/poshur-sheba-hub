@@ -1,10 +1,28 @@
 
+import { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 
 const Admin = () => {
   const { t } = useLanguage();
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/stats');
+        const result = await response.json();
+        if (result.success) {
+          setStats(result.data);
+        }
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   const adminActions = [
     {
@@ -74,26 +92,26 @@ const Admin = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card>
             <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold text-green-600">156</div>
+              <div className="text-2xl font-bold text-green-600">{stats?.totalCattle || 0}</div>
               <div className="text-sm text-gray-600">Total Livestock</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold text-blue-600">89</div>
+              <div className="text-2xl font-bold text-blue-600">{stats?.totalFarmers || 0}</div>
               <div className="text-sm text-gray-600">Active Farmers</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold text-purple-600">23</div>
-              <div className="text-sm text-gray-600">Pending Orders</div>
+              <div className="text-2xl font-bold text-purple-600">{stats?.totalNews || 0}</div>
+              <div className="text-sm text-gray-600">News Articles</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold text-red-600">₹1,24,500</div>
-              <div className="text-sm text-gray-600">Monthly Revenue</div>
+              <div className="text-2xl font-bold text-red-600">৳{stats?.averagePrice || 0}</div>
+              <div className="text-sm text-gray-600">Average Price</div>
             </CardContent>
           </Card>
         </div>
@@ -124,27 +142,15 @@ const Admin = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                  <div>
-                    <p className="font-medium">New livestock added by Karim Ahmed</p>
-                    <p className="text-sm text-gray-600">2 hours ago</p>
+                {stats?.recentListings?.map((listing) => (
+                  <div key={listing._id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                    <div>
+                      <p className="font-medium">New livestock added by {listing.seller.name}</p>
+                      <p className="text-sm text-gray-600">{new Date(listing.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <span className="text-green-600 text-sm">+1 Cattle</span>
                   </div>
-                  <span className="text-green-600 text-sm">+1 Cattle</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                  <div>
-                    <p className="font-medium">Order completed for fresh milk</p>
-                    <p className="text-sm text-gray-600">5 hours ago</p>
-                  </div>
-                  <span className="text-blue-600 text-sm">₹650</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                  <div>
-                    <p className="font-medium">New farmer registration</p>
-                    <p className="text-sm text-gray-600">1 day ago</p>
-                  </div>
-                  <span className="text-purple-600 text-sm">New User</span>
-                </div>
+                ))}
               </div>
             </CardContent>
           </Card>

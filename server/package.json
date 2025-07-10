@@ -1,0 +1,25 @@
+{
+  "name": "poshur-sheba-hub-backend",
+  "version": "1.0.0",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "latest",
+    "cloudinary": "latest",
+    "cors": "latest",
+    "dotenv": "^16.4.5",
+    "express": "latest",
+    "jsonwebtoken": "latest",
+    "mongoose": "latest",
+    "multer": "latest",
+    "multer-storage-cloudinary": "latest",
+    "path": "latest"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}

@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import { CartProvider } from "./contexts/CartContext";
 import Navbar from "./components/Navbar";
 import Index from "./pages/Index";
 import Market from "./pages/Market";
@@ -27,29 +28,31 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <LanguageProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <div className="min-h-screen bg-gradient-to-br from-green-50 to-amber-50">
-            <Navbar />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/market" element={<Market />} />
-              <Route path="/meat-shop" element={<MeatShop />} />
-              <Route path="/farmers" element={<Farmers />} />
-              <Route path="/dairy" element={<Dairy />} />
-              <Route path="/vet" element={<Vet />} />
-              <Route path="/premium" element={<Premium />} />
-              <Route path="/feed" element={<Feed />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/news" element={<News />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
-        </BrowserRouter>
+        <CartProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <div className="min-h-screen bg-gradient-to-br from-green-50 to-amber-50">
+              <Navbar />
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/market" element={<Market />} />
+                <Route path="/meat-shop" element={<MeatShop />} />
+                <Route path="/farmers" element={<Farmers />} />
+                <Route path="/dairy" element={<Dairy />} />
+                <Route path="/vet" element={<Vet />} />
+                <Route path="/premium" element={<Premium />} />
+                <Route path="/feed" element={<Feed />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/news" element={<News />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+          </BrowserRouter>
+        </CartProvider>
       </LanguageProvider>
     </TooltipProvider>
   </QueryClientProvider>
