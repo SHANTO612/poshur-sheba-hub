@@ -7,12 +7,20 @@ const connectDB = async () => {
     console.log("🔗 Attempting to connect to MongoDB...")
     console.log("📊 MongoDB URI:", mongoUri ? "Set" : "Not set")
     
-    const conn = await mongoose.connect(mongoUri, {
+    // Add timeout to prevent hanging
+    const connectionPromise = mongoose.connect(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000, // 5 second timeout
+      serverSelectionTimeoutMS: 10000, // 10 second timeout
       socketTimeoutMS: 45000, // 45 second timeout
     })
+
+    // Add timeout to the connection
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Database connection timeout')), 15000) // 15 second timeout
+    })
+
+    const conn = await Promise.race([connectionPromise, timeoutPromise])
 
     console.log(`📊 MongoDB Connected: ${conn.connection.host}`)
     console.log(`✅ Database: ${conn.connection.name}`)
@@ -20,7 +28,8 @@ const connectDB = async () => {
     console.error("❌ MongoDB connection error:", error.message)
     console.error("💡 Make sure MongoDB is running locally or set MONGODB_URI environment variable")
     console.error("🔧 Check your Railway environment variables")
-    process.exit(1)
+    // Don't exit immediately, let the app try to start
+    console.log("⚠️ Continuing without database connection...")
   }
 }
 

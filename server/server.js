@@ -122,6 +122,15 @@ app.get("/ping", (req, res) => {
   res.json({ message: "pong", timestamp: new Date().toISOString() })
 })
 
+// Keep-alive route for Railway
+app.get("/keep-alive", (req, res) => {
+  res.json({ 
+    status: "alive", 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  })
+})
+
 // API Routes
 console.log('🔧 Registering API routes...')
 try {
@@ -159,6 +168,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🌐 Railway URL: https://cattle-bes.up.railway.app`)
   console.log(`📋 Features: MongoDB + Cloudinary + JWT Auth`)
   console.log(`✅ Server is ready to accept requests`)
+  console.log(`🔄 Keep-alive endpoint: /keep-alive`)
 }).on('error', (error) => {
   console.error('❌ Server failed to start:', error.message)
   if (error.code === 'EADDRINUSE') {
@@ -167,16 +177,34 @@ app.listen(PORT, '0.0.0.0', () => {
   process.exit(1)
 })
 
+// Keep the process alive
+setInterval(() => {
+  console.log('💓 Heartbeat - Server is still running...')
+}, 30000) // Log every 30 seconds
+
 module.exports = app
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
   console.error('❌ Uncaught Exception:', error)
+  console.error('🔧 This should not happen - the app will exit')
   process.exit(1)
 })
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason)
+  console.error('🔧 This should not happen - the app will exit')
   process.exit(1)
+})
+
+// Handle graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('🔄 Received SIGTERM, shutting down gracefully...')
+  process.exit(0)
+})
+
+process.on('SIGINT', () => {
+  console.log('🔄 Received SIGINT, shutting down gracefully...')
+  process.exit(0)
 })
