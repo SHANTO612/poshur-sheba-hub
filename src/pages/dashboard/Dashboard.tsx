@@ -21,7 +21,14 @@ import {
   Store,
   ShoppingBag,
   Activity,
-  Package
+  Package,
+  Users,
+  Zap,
+  Trash2,
+  UserX,
+  AlertTriangle,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import AddCattleDialog from '../../components/business/cattle/AddCattleDialog';
 import AddProductDialog from '../../components/business/products/AddProductDialog';
@@ -71,11 +78,25 @@ const Dashboard = () => {
     pendingAppointments: 0
   });
 
+  // 1. Import necessary hooks and components from Admin.tsx
+  const [adminStats, setAdminStats] = useState(null);
+  const [adminUsers, setAdminUsers] = useState([]);
+  const [adminCattle, setAdminCattle] = useState([]);
+  const [adminProducts, setAdminProducts] = useState([]);
+  const [adminRatings, setAdminRatings] = useState([]);
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [adminError, setAdminError] = useState(null);
+  const [adminDeleteLoading, setAdminDeleteLoading] = useState({});
+  const [adminActiveTab, setAdminActiveTab] = useState('users');
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+
   useEffect(() => {
     if (user && token) {
       fetchUserData();
     }
-  }, [user, token]);
+    // eslint-disable-next-line
+  }, [user]);
 
   const fetchUserData = async () => {
     try {
@@ -87,6 +108,8 @@ const Dashboard = () => {
         await fetchMyProducts();
       } else if (user?.userType === 'veterinarian') {
         await fetchAppointmentStats();
+      } else if (user?.userType === 'admin') {
+        await fetchAdminData();
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -191,6 +214,52 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error('Error fetching appointment stats:', error);
+    }
+  };
+
+  // 3. Add admin data fetching
+  const fetchAdminData = async () => {
+    try {
+      setAdminLoading(true);
+      setAdminError(null);
+      const [statsRes, usersRes, cattleRes, productsRes, ratingsRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/admin/stats`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE_URL}/admin/users`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE_URL}/cattle`),
+        fetch(`${API_BASE_URL}/products`),
+        fetch(`${API_BASE_URL}/ratings`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      if (statsRes.ok) setAdminStats((await statsRes.json()).data);
+      if (usersRes.ok) setAdminUsers((await usersRes.json()).data || []);
+      if (cattleRes.ok) setAdminCattle((await cattleRes.json()).data || []);
+      if (productsRes.ok) setAdminProducts((await productsRes.json()).data || []);
+      if (ratingsRes.ok) setAdminRatings((await ratingsRes.json()).data || []);
+    } catch (error) {
+      setAdminError('Failed to load admin data');
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
+  const handleAdminDelete = async (type, id, name) => {
+    if (!confirm(`Are you sure you want to delete this ${type}?`)) return;
+    try {
+      setAdminDeleteLoading(prev => ({ ...prev, [id]: true }));
+      const response = await fetch(`${API_BASE_URL}/admin/${type}/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      });
+      const result = await response.json();
+      if (response.ok && result.success) {
+        toast.success(`${type} deleted successfully!`);
+        fetchAdminData();
+      } else {
+        toast.error(result.message || `Failed to delete ${type}`);
+      }
+    } catch (error) {
+      toast.error(`Failed to delete ${type}. Please try again.`);
+    } finally {
+      setAdminDeleteLoading(prev => ({ ...prev, [id]: false }));
     }
   };
 
@@ -644,6 +713,79 @@ const Dashboard = () => {
     }
     return null;
   };
+
+  if (user?.userType === 'admin') {
+    if (adminLoading) {
+      return <div className="min-h-screen py-8 text-center">Loading admin dashboard...</div>;
+    }
+    if (adminError) {
+      return <div className="min-h-screen py-8 text-center text-red-500">{adminError}</div>;
+    }
+    return (
+      <div className="min-h-screen py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+            <p className="text-gray-600">Manage users, content, and monitor platform activity</p>
+          </div>
+          {/* Stats Cards */}
+          {adminStats && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Total Users</CardTitle><Users className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{adminStats.totalUsers}</div></CardContent></Card>
+              <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Cattle Listings</CardTitle><Zap className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{adminStats.totalCattle}</div></CardContent></Card>
+              <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Products</CardTitle><Package className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{adminStats.totalProducts}</div></CardContent></Card>
+              <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Ratings</CardTitle><Star className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{adminStats.totalRatings}</div></CardContent></Card>
+            </div>
+          )}
+          {/* Management Tabs */}
+          <Card className="mb-8">
+            <CardHeader><CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" />Content Management</CardTitle></CardHeader>
+            <CardContent>
+              <div className="flex space-x-2 mb-6">
+                <Button variant={adminActiveTab === 'users' ? 'default' : 'outline'} onClick={() => setAdminActiveTab('users')}>Users ({adminUsers.length})</Button>
+                <Button variant={adminActiveTab === 'cattle' ? 'default' : 'outline'} onClick={() => setAdminActiveTab('cattle')}>Cattle ({adminCattle.length})</Button>
+                <Button variant={adminActiveTab === 'products' ? 'default' : 'outline'} onClick={() => setAdminActiveTab('products')}>Products ({adminProducts.length})</Button>
+                <Button variant={adminActiveTab === 'ratings' ? 'default' : 'outline'} onClick={() => setAdminActiveTab('ratings')}>Ratings ({adminRatings.length})</Button>
+              </div>
+              {/* Users Tab */}
+              {adminActiveTab === 'users' && (
+                <div className="overflow-x-auto">
+                  <table className="w-full"><thead><tr className="border-b"><th className="text-left py-2">Name</th><th className="text-left py-2">Email</th><th className="text-left py-2">Phone</th><th className="text-left py-2">Type</th><th className="text-left py-2">Status</th><th className="text-left py-2">Joined</th><th className="text-left py-2">Actions</th></tr></thead><tbody>{adminUsers.map((u) => (<tr key={u._id} className="border-b hover:bg-gray-50"><td className="py-2">{u.name}</td><td className="py-2">{u.email}</td><td className="py-2">{u.phone || 'N/A'}</td><td className="py-2"><Badge variant={u.userType === 'admin' ? 'destructive' : 'secondary'}>{u.userType}</Badge></td><td className="py-2">{u.isActive ? (<CheckCircle className="h-4 w-4 text-green-500" />) : (<XCircle className="h-4 w-4 text-red-500" />)}</td><td className="py-2">{new Date(u.createdAt).toLocaleDateString()}</td><td className="py-2">{u.userType !== 'admin' && (<Button variant="destructive" size="sm" onClick={() => handleAdminDelete('users', u._id, u.name)} disabled={adminDeleteLoading[u._id]}>{adminDeleteLoading[u._id] ? 'Deleting...' : (<><Trash2 className="h-4 w-4 mr-1" />Delete</>)}</Button>)}</td></tr>))}</tbody></table>
+                </div>
+              )}
+              {/* Cattle Tab */}
+              {adminActiveTab === 'cattle' && (
+                <div className="overflow-x-auto">
+                  <table className="w-full"><thead><tr className="border-b"><th className="text-left py-2">Name</th><th className="text-left py-2">Breed</th><th className="text-left py-2">Price</th><th className="text-left py-2">Seller</th><th className="text-left py-2">Actions</th></tr></thead><tbody>{adminCattle.map((c) => (<tr key={c._id} className="border-b hover:bg-gray-50"><td className="py-2">{c.name}</td><td className="py-2">{c.breed}</td><td className="py-2">{c.price}</td><td className="py-2">{c.seller?.name || 'Unknown'}</td><td className="py-2"><Button variant="destructive" size="sm" onClick={() => handleAdminDelete('cattle', c._id, c.name)} disabled={adminDeleteLoading[c._id]}>{adminDeleteLoading[c._id] ? 'Deleting...' : (<><Trash2 className="h-4 w-4 mr-1" />Delete</>)}</Button></td></tr>))}</tbody></table>
+                </div>
+              )}
+              {/* Products Tab */}
+              {adminActiveTab === 'products' && (
+                <div className="overflow-x-auto">
+                  <table className="w-full"><thead><tr className="border-b"><th className="text-left py-2">Name</th><th className="text-left py-2">Category</th><th className="text-left py-2">Price</th><th className="text-left py-2">Seller</th><th className="text-left py-2">Actions</th></tr></thead><tbody>{adminProducts.map((p) => (<tr key={p._id} className="border-b hover:bg-gray-50"><td className="py-2">{p.name}</td><td className="py-2">{p.category}</td><td className="py-2">{p.price}</td><td className="py-2">{p.seller?.name || 'Unknown'}</td><td className="py-2"><Button variant="destructive" size="sm" onClick={() => handleAdminDelete('products', p._id, p.name)} disabled={adminDeleteLoading[p._id]}>{adminDeleteLoading[p._id] ? 'Deleting...' : (<><Trash2 className="h-4 w-4 mr-1" />Delete</>)}</Button></td></tr>))}</tbody></table>
+                </div>
+              )}
+              {/* Ratings Tab */}
+              {adminActiveTab === 'ratings' && (
+                <div className="overflow-x-auto">
+                  <table className="w-full"><thead><tr className="border-b"><th className="text-left py-2">Farmer</th><th className="text-left py-2">Veterinarian</th><th className="text-left py-2">Rating</th><th className="text-left py-2">Actions</th></tr></thead><tbody>{adminRatings.map((r) => (<tr key={r._id} className="border-b hover:bg-gray-50"><td className="py-2">{r.farmer?.name || 'Unknown'}</td><td className="py-2">{r.veterinarian?.name || 'Unknown'}</td><td className="py-2">{r.rating}/5</td><td className="py-2"><Button variant="destructive" size="sm" onClick={() => handleAdminDelete('ratings', r._id, 'rating')} disabled={adminDeleteLoading[r._id]}>{adminDeleteLoading[r._id] ? 'Deleting...' : (<><Trash2 className="h-4 w-4 mr-1" />Delete</>)}</Button></td></tr>))}</tbody></table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          {/* User Type Breakdown */}
+          {adminStats && adminStats.userTypes && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <Card><CardHeader><CardTitle className="text-sm">Farmers</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{adminStats.userTypes.farmers}</div></CardContent></Card>
+              <Card><CardHeader><CardTitle className="text-sm">Sellers</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{adminStats.userTypes.sellers}</div></CardContent></Card>
+              <Card><CardHeader><CardTitle className="text-sm">Veterinarians</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{adminStats.userTypes.veterinarians}</div></CardContent></Card>
+              <Card><CardHeader><CardTitle className="text-sm">Buyers</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{adminStats.userTypes.buyers}</div></CardContent></Card>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-amber-50 py-8">

@@ -16,7 +16,6 @@ import VetContact from "./pages/public/VetContact";
 import Feed from "./pages/public/Feed";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
-import Admin from "./pages/admin/Admin";
 import News from "./pages/public/News";
 import Contact from "./pages/public/Contact";
 import NotFound from "./pages/public/NotFound";
@@ -47,7 +46,6 @@ const App = () => (
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/admin" element={<Admin />} />
                   <Route path="/news" element={<News />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="*" element={<NotFound />} />

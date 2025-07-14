@@ -1,4 +1,5 @@
-const API_BASE_URL = 'https://poshur-sheba-hub.onrender.com/api';
+// Use environment variable for API base URL, fallback to localhost for dev
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -42,22 +43,18 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
-      
-      // Check if response is empty
       const text = await response.text();
-      console.log('Raw response:', text);
-      
-      if (!text) {
-        throw new Error('Empty response from server');
+      // Try to parse as JSON, otherwise show a user-friendly error
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (jsonError) {
+        throw new Error('Server returned an unexpected response. It may be waking up or unavailable. Please try again in a few seconds.');
       }
-      
-      const data = JSON.parse(text);
-
       if (!response.ok) {
         console.error('API Error Response:', data);
         throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
       }
-
       return data;
     } catch (error) {
       console.error('API request failed:', error);
