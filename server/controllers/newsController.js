@@ -23,9 +23,9 @@ const getAllNews = async (req, res) => {
       sort = { featured: -1, createdAt: -1 }
     }
 
-    // Pagination
+    // Pagination - ensure minimum of 5 items
     const page = Number.parseInt(req.query.page) || 1
-    const limit = Number.parseInt(req.query.limit) || 10
+    const limit = Math.max(Number.parseInt(req.query.limit) || 10, 5) // Minimum 5 items
     const skip = (page - 1) * limit
 
     // Execute query
@@ -42,6 +42,8 @@ const getAllNews = async (req, res) => {
         totalPages: Math.ceil(totalItems / limit),
         totalItems,
         itemsPerPage: limit,
+        hasNextPage: page < Math.ceil(totalItems / limit),
+        hasPrevPage: page > 1,
       },
     })
   } catch (error) {
@@ -89,11 +91,41 @@ const getNewsById = async (req, res) => {
 
 const getFeaturedNews = async (req, res) => {
   try {
-    const news = await News.find({ published: true, featured: true }).sort({ createdAt: -1 }).limit(5)
+    // Support configurable limit with minimum of 5
+    const limit = Math.max(Number.parseInt(req.query.limit) || 5, 5)
+    
+    const news = await News.find({ published: true, featured: true })
+      .sort({ createdAt: -1 })
+      .limit(limit)
 
     res.json({
       success: true,
       data: news,
+      count: news.length,
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    })
+  }
+}
+
+const getLatestNews = async (req, res) => {
+  try {
+    // Get latest news with configurable limit, minimum 5
+    const limit = Math.max(Number.parseInt(req.query.limit) || 10, 5)
+    
+    const news = await News.find({ published: true })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+
+    res.json({
+      success: true,
+      data: news,
+      count: news.length,
+      lastUpdated: new Date(),
     })
   } catch (error) {
     res.status(500).json({
@@ -108,4 +140,5 @@ module.exports = {
   getAllNews,
   getNewsById,
   getFeaturedNews,
+  getLatestNews,
 }

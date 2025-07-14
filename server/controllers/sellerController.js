@@ -2,36 +2,26 @@ const User = require("../models/User")
 
 const getAllSellers = async (req, res) => {
   try {
-    // Get all users with userType "seller"
-    let query = { userType: "seller", isActive: true }
+    const sellers = await User.find({ userType: "seller", isActive: true })
+      .select("name email phone shopName location rating totalSales createdAt")
+      .sort({ rating: -1, createdAt: -1 })
 
-    // Filter by location
-    if (req.query.location) {
-      query.location = { $regex: req.query.location, $options: 'i' }
-    }
+    const formattedSellers = sellers.map(seller => ({
+      _id: seller._id,
+      name: seller.name,
+      email: seller.email,
+      phone: seller.phone,
+      shopName: seller.shopName,
+      location: seller.location,
+      rating: seller.rating,
+      totalSales: seller.totalSales,
+      createdAt: seller.createdAt
+    }))
 
-    // Filter by business type
-    if (req.query.businessType) {
-      query.businessType = { $regex: req.query.businessType, $options: 'i' }
-    }
-
-    // Filter by verified status
-    if (req.query.verified) {
-      query.isVerified = req.query.verified === "true"
-    }
-
-    // Build sort object
-    let sort = { rating: -1 } // Default: highest rating first
-
-    if (req.query.sortBy === "totalSales_desc") {
-      sort = { totalSales: -1 }
-    } else if (req.query.sortBy === "name_asc") {
-      sort = { name: 1 }
-    }
-
-    const sellers = await User.find(query).sort(sort)
-
-    res.json({ success: true, data: sellers })
+    res.json({
+      success: true,
+      data: formattedSellers,
+    })
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -44,17 +34,37 @@ const getAllSellers = async (req, res) => {
 const getSellerById = async (req, res) => {
   try {
     const seller = await User.findById(req.params.id)
+      .select("name email phone shopName location rating totalSales createdAt")
 
-    if (!seller || seller.userType !== "seller") {
+    if (!seller) {
       return res.status(404).json({
         success: false,
         message: "Seller not found",
       })
     }
 
+    if (seller.userType !== "seller") {
+      return res.status(404).json({
+        success: false,
+        message: "User is not a seller",
+      })
+    }
+
+    const formattedSeller = {
+      _id: seller._id,
+      name: seller.name,
+      email: seller.email,
+      phone: seller.phone,
+      shopName: seller.shopName,
+      location: seller.location,
+      rating: seller.rating,
+      totalSales: seller.totalSales,
+      createdAt: seller.createdAt
+    }
+
     res.json({
       success: true,
-      data: seller,
+      data: formattedSeller,
     })
   } catch (error) {
     if (error.name === "CastError") {

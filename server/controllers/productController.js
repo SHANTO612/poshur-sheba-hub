@@ -3,21 +3,22 @@ const { deleteImage } = require("../config/cloudinary")
 
 const getAllProducts = async (req, res) => {
   try {
-    let query = { status: "active" }
+    console.log('Product query params:', req.query);
+    const query = {}
+
+    // Filter by type
+    if (req.query.type) {
+      // Handle comma-separated types (e.g., "feed,equipment")
+      if (req.query.type.includes(',')) {
+        query.type = { $in: req.query.type.split(',') }
+      } else {
+        query.type = req.query.type
+      }
+    }
 
     // Filter by category
     if (req.query.category) {
       query.category = req.query.category
-    }
-
-    // Filter by type (supports comma-separated values)
-    if (req.query.type) {
-      const types = req.query.type.split(',');
-      if (types.length > 1) {
-        query.type = { $in: types };
-      } else {
-        query.type = req.query.type;
-      }
     }
 
     // Filter by seller
@@ -25,14 +26,11 @@ const getAllProducts = async (req, res) => {
       query.seller = req.query.seller
     }
 
-    // Filter by availability
-    if (req.query.available !== undefined) {
-      query.available = req.query.available === "true"
-    }
-
-    // Filter by halal status
-    if (req.query.halal !== undefined) {
-      query.halal = req.query.halal === "true"
+    // Filter by price range
+    if (req.query.minPrice || req.query.maxPrice) {
+      query.priceNumeric = {}
+      if (req.query.minPrice) query.priceNumeric.$gte = Number(req.query.minPrice)
+      if (req.query.maxPrice) query.priceNumeric.$lte = Number(req.query.maxPrice)
     }
 
     // Search functionality
@@ -49,13 +47,37 @@ const getAllProducts = async (req, res) => {
       sort = { priceNumeric: -1 }
     } else if (req.query.sortBy === "name_asc") {
       sort = { name: 1 }
+    } else if (req.query.sortBy === "name_desc") {
+      sort = { name: -1 }
     }
 
-    const products = await Product.find(query)
-      .sort(sort)
-      .populate("seller", "name shopName location phone rating")
+    // Pagination
+    const page = Number.parseInt(req.query.page) || 1
+    const limit = Number.parseInt(req.query.limit) || 10
+    const skip = (page - 1) * limit
 
-    res.json({ success: true, data: products })
+    // Execute query
+    console.log('Final query:', JSON.stringify(query, null, 2));
+    const products = await Product.find(query)
+      .populate("seller", "name shopName location rating")
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+    console.log('Found products:', products.length);
+
+    // Get total count for pagination
+    const totalItems = await Product.countDocuments(query)
+
+    res.json({
+      success: true,
+      data: products,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalItems / limit),
+        totalItems,
+        itemsPerPage: limit,
+      },
+    })
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -114,10 +136,32 @@ const createProduct = async (req, res) => {
 
     // Handle uploaded images
     if (req.files && req.files.length > 0) {
-      productData.images = req.files.map((file) => ({
-        url: file.path,
-        publicId: file.filename,
-      }))
+      console.log('Uploaded files:', req.files);
+      productData.images = req.files.map((file) => {
+        console.log('File object:', file);
+        
+        // Handle Cloudinary storage (has secure_url and public_id)
+        if (file.secure_url) {
+          return {
+            url: file.secure_url,
+            publicId: file.public_id,
+          }
+        }
+        
+        // Handle memory storage (has path and filename)
+        if (file.path) {
+          return {
+            url: file.path,
+            publicId: file.filename,
+          }
+        }
+        
+        // Fallback for other storage types
+        return {
+          url: file.url || file.path,
+          publicId: file.public_id || file.filename,
+        }
+      })
     }
 
     const product = await Product.create(productData)
@@ -194,10 +238,29 @@ const updateProduct = async (req, res) => {
       }
 
       // Add new images
-      req.body.images = req.files.map((file) => ({
-        url: file.path,
-        publicId: file.filename,
-      }))
+      req.body.images = req.files.map((file) => {
+        // Handle Cloudinary storage (has secure_url and public_id)
+        if (file.secure_url) {
+          return {
+            url: file.secure_url,
+            publicId: file.public_id,
+          }
+        }
+        
+        // Handle memory storage (has path and filename)
+        if (file.path) {
+          return {
+            url: file.path,
+            publicId: file.filename,
+          }
+        }
+        
+        // Fallback for other storage types
+        return {
+          url: file.url || file.path,
+          publicId: file.public_id || file.filename,
+        }
+      })
     }
 
     const updatedProduct = await Product.findByIdAndUpdate(req.params.id, req.body, {

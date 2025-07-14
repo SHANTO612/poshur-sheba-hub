@@ -1,17 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-interface CartItem {
-  id: string;
-  name: string;
-  price: string;
-  priceNumeric: number;
-  quantity: number;
-  image?: string;
-  seller: {
-    name: string;
-    shopName: string;
-  };
-}
+import { CartItem } from '../types/common';
 
 interface CartContextType {
   items: CartItem[];
@@ -100,7 +88,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       updateQuantity,
       clearCart,
       getTotalItems,
-      getTotalPrice,
+      getTotalPrice
     }}>
       {children}
     </CartContext.Provider>

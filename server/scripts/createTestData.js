@@ -37,7 +37,7 @@ const createTestData = async () => {
         password: "password123",
         shopName: "Test Shop",
         location: "Chittagong",
-        businessType: "Meat Shop",
+
         rating: 4.2,
         totalSales: 15,
         isVerified: true,

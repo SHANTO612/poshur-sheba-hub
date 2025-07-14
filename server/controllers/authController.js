@@ -23,7 +23,6 @@ const register = async (req, res, next) => {
       availability,
       // Seller specific fields
       shopName,
-      businessType,
       // Buyer specific fields
       address
     } = req.body
@@ -82,9 +81,14 @@ const register = async (req, res, next) => {
       if (licenseNumber) userData.licenseNumber = licenseNumber
       if (availability) userData.availability = availability
     } else if (userType === 'seller') {
-      if (shopName) userData.shopName = shopName
-      if (location) userData.location = location
-      if (businessType) userData.businessType = businessType
+      if (!shopName || !location) {
+        return res.status(400).json({
+          success: false,
+          message: "Shop name and location are required for sellers",
+        })
+      }
+      userData.shopName = shopName
+      userData.location = location
     } else if (userType === 'buyer') {
       if (address) userData.address = address
     }
@@ -116,7 +120,6 @@ const register = async (req, res, next) => {
           licenseNumber: user.licenseNumber,
           availability: user.availability,
           shopName: user.shopName,
-          businessType: user.businessType,
           address: user.address,
         },
         token,
@@ -130,9 +133,11 @@ const register = async (req, res, next) => {
 const login = async (req, res, next) => {
   try {
     const { email, password } = req.body
+    console.log('Login attempt for email:', email)
 
     // Validation
     if (!email || !password) {
+      console.log('Missing email or password')
       return res.status(400).json({
         success: false,
         message: "Email and password are required",
@@ -141,7 +146,10 @@ const login = async (req, res, next) => {
 
     // Find user and include password
     const user = await User.findOne({ email, isActive: true }).select("+password")
+    console.log('User found:', user ? 'Yes' : 'No')
+    
     if (!user) {
+      console.log('User not found or inactive')
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
@@ -150,7 +158,10 @@ const login = async (req, res, next) => {
 
     // Validate password
     const isValidPassword = await user.comparePassword(password)
+    console.log('Password valid:', isValidPassword)
+    
     if (!isValidPassword) {
+      console.log('Invalid password')
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
@@ -162,6 +173,7 @@ const login = async (req, res, next) => {
 
     // Generate token
     const token = user.generateToken()
+    console.log('Login successful for user:', user.email)
 
     res.json({
       success: true,
@@ -184,13 +196,13 @@ const login = async (req, res, next) => {
           licenseNumber: user.licenseNumber,
           availability: user.availability,
           shopName: user.shopName,
-          businessType: user.businessType,
           address: user.address,
         },
         token,
       },
     })
   } catch (error) {
+    console.error('Login error:', error)
     next(error)
   }
 }
@@ -233,7 +245,6 @@ const updateProfile = async (req, res, next) => {
       availability,
       // Seller specific fields
       shopName,
-      businessType,
       // Buyer specific fields
       address
     } = req.body
@@ -251,7 +262,6 @@ const updateProfile = async (req, res, next) => {
     if (licenseNumber) updateData.licenseNumber = licenseNumber
     if (availability) updateData.availability = availability
     if (shopName) updateData.shopName = shopName
-    if (businessType) updateData.businessType = businessType
     if (address) updateData.address = address
 
     const user = await User.findByIdAndUpdate(req.user._id, updateData, {

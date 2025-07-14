@@ -4,6 +4,7 @@ const { authenticateToken } = require('../middlewares/auth');
 const adminAuth = require('../middlewares/adminAuth');
 const {
   getAllUsers,
+  getAllNews,
   deleteUser,
   deleteCattle,
   deleteProduct,
@@ -24,6 +25,7 @@ router.get('/users', getAllUsers);
 router.delete('/users/:userId', deleteUser);
 
 // Content management
+router.get('/news', getAllNews);
 router.delete('/cattle/:cattleId', deleteCattle);
 router.delete('/products/:productId', deleteProduct);
 router.delete('/news/:newsId', deleteNews);

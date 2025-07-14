@@ -71,6 +71,12 @@ const userSchema = new mongoose.Schema(
       trim: true,
       maxlength: [500, "Description cannot exceed 500 characters"],
     },
+    // Farmer specific fields
+    livestock: {
+      type: String,
+      trim: true,
+      default: "Cattle, Poultry",
+    },
     // Veterinarian specific fields
     clinicName: {
       type: String,
@@ -90,10 +96,6 @@ const userSchema = new mongoose.Schema(
     },
     // Seller specific fields
     shopName: {
-      type: String,
-      trim: true,
-    },
-    businessType: {
       type: String,
       trim: true,
     },

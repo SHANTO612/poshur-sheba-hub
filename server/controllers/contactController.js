@@ -7,22 +7,45 @@ exports.sendContactMessage = async (req, res) => {
   }
 
   try {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS,
-      },
+    // For development, just log the message instead of sending email
+    console.log('Contact Form Message:', {
+      name,
+      email,
+      phone,
+      subject,
+      message,
+      timestamp: new Date().toISOString()
     });
 
-    const mailOptions = {
-      from: process.env.GMAIL_USER,
-      to: 'shantocse612@gmail.com',
-      subject: `[Contact Form] ${subject}`,
-      text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\n\nMessage:\n${message}`,
-    };
+    // If email credentials are configured, send email
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
 
-    await transporter.sendMail(mailOptions);
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: 'shantocse612@gmail.com',
+        subject: `[Contact Form] ${subject}`,
+        text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\n\nMessage:\n${message}`,
+      };
+
+      console.log('Sending email with options:', {
+        from: mailOptions.from,
+        to: mailOptions.to,
+        subject: mailOptions.subject
+      });
+      
+      await transporter.sendMail(mailOptions);
+      console.log('Email sent successfully!');
+    } else {
+      console.log('Email credentials not found. Skipping email send.');
+    }
+
     res.json({ success: true, message: 'Message sent successfully.' });
   } catch (error) {
     console.error('Error sending contact email:', error);

@@ -3,11 +3,11 @@ const cloudinary = require("cloudinary").v2
 const { CloudinaryStorage } = require("multer-storage-cloudinary")
 const multer = require("multer")
 
-// Configure Cloudinary
+// Configure Cloudinary with fallback values for development
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "demo",
+  api_key: process.env.CLOUDINARY_API_KEY || "demo_key",
+  api_secret: process.env.CLOUDINARY_API_SECRET || "demo_secret",
 })
 
 // Configure Cloudinary storage for multer
@@ -20,9 +20,25 @@ const storage = new CloudinaryStorage({
   },
 })
 
-// Configure multer with Cloudinary storage
+// Check if we have real Cloudinary credentials
+const hasRealCredentials = process.env.CLOUDINARY_API_KEY && 
+                         process.env.CLOUDINARY_API_KEY !== "demo_key" &&
+                         process.env.CLOUDINARY_CLOUD_NAME &&
+                         process.env.CLOUDINARY_CLOUD_NAME !== "demo";
+
+// Use different storage based on credentials
+const finalStorage = hasRealCredentials ? storage : multer.memoryStorage();
+
+// Log which storage we're using
+if (hasRealCredentials) {
+  console.log('📁 Using Cloudinary storage for image uploads');
+} else {
+  console.log('📁 Using memory storage for image uploads (demo mode)');
+}
+
+// Configure multer with appropriate storage
 const upload = multer({
-  storage: storage,
+  storage: finalStorage,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
@@ -39,11 +55,18 @@ const upload = multer({
 // Helper function to delete image from Cloudinary
 const deleteImage = async (publicId) => {
   try {
-    const result = await cloudinary.uploader.destroy(publicId)
-    return result
+    // Only try to delete if we have real Cloudinary credentials
+    if (process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_KEY !== "demo_key") {
+      const result = await cloudinary.uploader.destroy(publicId)
+      return result
+    } else {
+      console.log("Skipping Cloudinary delete - using demo credentials")
+      return { result: "ok" }
+    }
   } catch (error) {
     console.error("Error deleting image from Cloudinary:", error)
-    throw error
+    // Don't throw error, just log it
+    return { result: "error", message: error.message }
   }
 }
 

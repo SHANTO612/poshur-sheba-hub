@@ -2,37 +2,35 @@ const User = require("../models/User")
 
 const getAllVeterinarians = async (req, res) => {
   try {
-    // Get all users with userType "veterinarian"
-    let query = { userType: "veterinarian", isActive: true }
+    console.log("Fetching veterinarians...");
+    
+    const veterinarians = await User.find({ userType: "veterinarian" })
+      .select("name email phone clinicName location specialization licenseNumber availability createdAt")
+      .sort({ rating: -1, createdAt: -1 })
 
-    // Filter by location
-    if (req.query.location) {
-      query.location = { $regex: req.query.location, $options: 'i' }
-    }
+    console.log(`Found ${veterinarians.length} veterinarians`);
 
-    // Filter by specialization
-    if (req.query.specialization) {
-      query.specialization = { $regex: req.query.specialization, $options: 'i' }
-    }
+    const formattedVeterinarians = veterinarians.map(vet => ({
+      _id: vet._id,
+      name: vet.name,
+      email: vet.email,
+      phone: vet.phone,
+      clinicName: vet.clinicName,
+      location: vet.location,
+      specialization: vet.specialization,
+      licenseNumber: vet.licenseNumber,
+      availability: vet.availability,
+      createdAt: vet.createdAt
+    }))
 
-    // Filter by verified status
-    if (req.query.verified) {
-      query.isVerified = req.query.verified === "true"
-    }
+    console.log("Sending response:", { success: true, data: formattedVeterinarians });
 
-    // Build sort object
-    let sort = { rating: -1 } // Default: highest rating first
-
-    if (req.query.sortBy === "experience_desc") {
-      sort = { experience: -1 }
-    } else if (req.query.sortBy === "name_asc") {
-      sort = { name: 1 }
-    }
-
-    const veterinarians = await User.find(query).sort(sort)
-
-    res.json({ success: true, data: veterinarians })
+    res.json({
+      success: true,
+      data: formattedVeterinarians,
+    })
   } catch (error) {
+    console.error("Error in getAllVeterinarians:", error);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -44,17 +42,38 @@ const getAllVeterinarians = async (req, res) => {
 const getVeterinarianById = async (req, res) => {
   try {
     const veterinarian = await User.findById(req.params.id)
+      .select("name email phone clinicName location specialization licenseNumber availability createdAt")
 
-    if (!veterinarian || veterinarian.userType !== "veterinarian") {
+    if (!veterinarian) {
       return res.status(404).json({
         success: false,
         message: "Veterinarian not found",
       })
     }
 
+    if (veterinarian.userType !== "veterinarian") {
+      return res.status(404).json({
+        success: false,
+        message: "User is not a veterinarian",
+      })
+    }
+
+    const formattedVeterinarian = {
+      _id: veterinarian._id,
+      name: veterinarian.name,
+      email: veterinarian.email,
+      phone: veterinarian.phone,
+      clinicName: veterinarian.clinicName,
+      location: veterinarian.location,
+      specialization: veterinarian.specialization,
+      licenseNumber: veterinarian.licenseNumber,
+      availability: veterinarian.availability,
+      createdAt: veterinarian.createdAt
+    }
+
     res.json({
       success: true,
-      data: veterinarian,
+      data: formattedVeterinarian,
     })
   } catch (error) {
     if (error.name === "CastError") {
