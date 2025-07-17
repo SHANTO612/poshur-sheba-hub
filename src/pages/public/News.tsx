@@ -53,6 +53,9 @@ const News = () => {
     
     try {
       // Fetch from NewsAPI - increased from 10 to 15
+      const NEWS_API_KEY = 'ed036617249b452f895c50b6c251d60e'; // <-- Replace with your NewsAPI.org API key
+      const GNEWS_API_KEY = '55bfbc52eee312b589d57a7937c19cb6'; // <-- Replace with your GNews.io API key
+      const NEWS_QUERY = '"cattle farm" OR "dairy farm" OR "livestock equipment" OR "dairy farmer" OR "cattle feed" OR "dairy equipment" OR "farm equipment" OR "cattle disease" OR "milk production" OR "livestock market"';
       const newsApiUrl = `https://newsapi.org/v2/everything?q=${encodeURIComponent(NEWS_QUERY)}&pageSize=15&sortBy=publishedAt&language=en&apiKey=${NEWS_API_KEY}`;
       const newsApiPromise = fetch(newsApiUrl).then(res => res.json());
 
@@ -62,9 +65,9 @@ const News = () => {
 
       const [newsApiResult, gnewsResult] = await Promise.all([newsApiPromise, gnewsPromise]);
 
-      let articles: any[] = [];
+      let articles = [];
       if (newsApiResult.status === 'ok') {
-        articles = articles.concat(newsApiResult.articles.map((a: any) => ({
+        articles = articles.concat(newsApiResult.articles.map((a) => ({
           title: a.title,
           description: a.description || a.content || '',
           url: a.url,
@@ -74,7 +77,7 @@ const News = () => {
         })));
       }
       if (gnewsResult.articles) {
-        articles = articles.concat(gnewsResult.articles.map((a: any) => ({
+        articles = articles.concat(gnewsResult.articles.map((a) => ({
           title: a.title,
           description: a.description || '',
           url: a.url,
@@ -83,7 +86,6 @@ const News = () => {
           source: a.source?.name || 'GNews',
         })));
       }
-      
       // Deduplicate by normalized title + published date (YYYY-MM-DD)
       const seen = new Set();
       const deduped = articles.filter(a => {
@@ -93,13 +95,10 @@ const News = () => {
         seen.add(titleKey);
         return true;
       });
-      
       // Filter for relevance: keyword must be in the title
       const relevant = deduped.filter(isRelevant);
-      
       // Ensure at least 5 news are shown
       const finalNews = relevant.length >= 5 ? relevant : relevant.concat(deduped.slice(0, 5 - relevant.length));
-      
       setNewsData(finalNews);
       setLastUpdated(new Date());
     } catch (error) {

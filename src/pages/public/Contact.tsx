@@ -25,7 +25,12 @@ const Contact = () => {
     setStatus('loading');
     setErrorMsg("");
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/contact`, {
+      // Utility to join base URL and endpoint safely
+      function joinUrl(base, path) {
+        return base.replace(/\/$/, '') + (path.startsWith('/') ? path : '/' + path);
+      }
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || (window.location.origin + '/api');
+      const res = await fetch(joinUrl(baseUrl, '/contact'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

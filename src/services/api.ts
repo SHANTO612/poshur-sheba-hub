@@ -1,5 +1,5 @@
-// Use environment variable for API base URL, fallback to localhost for dev
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+// Use environment variable for API base URL, fallback to window.location.origin + '/api' for dev
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' ? window.location.origin + '/api' : '');
 
 export interface ApiResponse<T = any> {
   success: boolean;
