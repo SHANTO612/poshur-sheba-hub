@@ -8,9 +8,8 @@ const router = express.Router()
 router.get("/", getAllNews)
 router.get("/featured", getFeaturedNews)
 router.get("/latest", getLatestNews)
-router.get("/:id", optionalAuth, getNewsById)
 
-// Proxy external news APIs (GNews, NewsAPI)
+// Proxy external news APIs (GNews, NewsAPI) - must be before /:id
 router.get('/external', async (req, res) => {
   const GNEWS_API_KEY = process.env.GNEWS_API_KEY;
   const NEWSAPI_API_KEY = process.env.NEWSAPI_API_KEY;
@@ -56,5 +55,8 @@ router.get('/external', async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to fetch external news', error: error.message });
   }
 });
+
+router.get("/:id", optionalAuth, getNewsById)
+
 
 module.exports = router
